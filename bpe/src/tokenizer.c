@@ -77,7 +77,7 @@ int GetTokensFromFile(Tokenizer** builder, const char* file_path){
     }
 
     size_t bytes_read = fread(file_buffer, 1, file_size, fptr);
-    file_buffer[bytes_read] = '\0';
+    file_t buffer[bytes_read] = '\0';
     fclose(fptr);
 
     InitTokens(builder);
