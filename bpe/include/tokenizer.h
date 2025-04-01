@@ -8,20 +8,26 @@
 
 #define SUCCESS 1
 #define TRUE 1
+
 #define FAILURE 0
 #define FALSE 0
 
+#define KEY 0
+#define VALUE 1
+
 #define DEFAULT_VOCAB_SIZE 512 // will double when dynamically growing
+#define DEFAULT_ENCODED_FILE_SIZE 1028 // will double when dynamically growing
 
 #define THREAD_COUNT 1 // number of threads
 
-
 // global variable
-char* file_buffer;
-long file_size;
+extern char* file_buffer;
+extern char* encoded_buffer;
+extern long file_size;
 
 typedef struct{
-    char* text;      // token string representation
+    char pair[2];      // token string representation
+    char* text;
     size_t count;    // token count
     size_t id;       // token identified
 }Token;

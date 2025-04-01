@@ -1,0 +1,18 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-Iinclude",
+      "-std=c11",
+      "-c",
+      "-o",
+      "obj/tokenizer.o",
+      "src/tokenizer.c"
+    ],
+    "directory": "/home/aiden-allen/Desktop/markov-chain/bpe",
+    "file": "/home/aiden-allen/Desktop/markov-chain/bpe/src/tokenizer.c",
+    "output": "/home/aiden-allen/Desktop/markov-chain/bpe/obj/tokenizer.o"
+  }
+]

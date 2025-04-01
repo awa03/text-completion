@@ -1,11 +1,14 @@
 #include "tokenizer.h"
 
+char* file_buffer;
+char* encoded_buffer;
+long file_size;
+
 int InitTokens(Tokenizer** builder){
     if ((*builder)->tokens == NULL) {
         (*builder)->tokens = (Token**)malloc(sizeof(Token*) * DEFAULT_VOCAB_SIZE);
         if (!(*builder)->tokens) {
             fprintf(stderr, "Failed to allocate token array\n");
-            free(buffer);
             return FAILURE;
         }
         (*builder)->vocab_size = DEFAULT_VOCAB_SIZE;
@@ -77,7 +80,7 @@ int GetTokensFromFile(Tokenizer** builder, const char* file_path){
     }
 
     size_t bytes_read = fread(file_buffer, 1, file_size, fptr);
-    file_t buffer[bytes_read] = '\0';
+    file_buffer[bytes_read] = '\0';
     fclose(fptr);
 
     InitTokens(builder);
