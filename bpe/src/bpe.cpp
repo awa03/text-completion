@@ -15,10 +15,13 @@ BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFA
     // need to use while to prevent recursion depth from being reached
     while(!stop_flag){
         Pair most_used_pair = {' ', ' ', 0}; // the pair that has been used the most
+        std::cout << content << "\n";
 
         // encode -- set these two vars
         data->encode(content, most_used_pair);
-        break;
+        std::cout << most_used_pair.first;
+        std::cout << most_used_pair.second << "\n";
+        std::cout << most_used_pair.freq << "\n";
         stop_flag = data->stopEncoding(most_used_pair.freq);
     }
 
@@ -43,7 +46,7 @@ void BytePairEncoded::encode(std::string& content, Pair& most_used_pair){
 
         // update frequency within local table
         if(find != pair_freq.end()){
-            tmp.freq = find->first.freq;
+            tmp.freq = find->first.freq + 1;
             replacement = find->second;
             pair_freq.erase(find);
             pair_freq[tmp] = replacement;
@@ -64,8 +67,6 @@ void BytePairEncoded::encode(std::string& content, Pair& most_used_pair){
         if(tmp.freq > most_used_pair.freq){
             most_used_pair = tmp;
         }
-
-        new_data += replacement;
     }
 
     content = new_data;
