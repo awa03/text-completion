@@ -1,6 +1,10 @@
 ### Purpose
 
 ****
+### Technology
+- Byte Pair Encoding Algorithm: C++ (Used for hashtable)
+- Markov Chain Implementation: C
+****
 ### Usage
 
 ****
