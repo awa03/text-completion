@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <regex>
 
 #define DEFAULT_VOCAB_SIZE 32
 
@@ -18,6 +19,11 @@ struct Pair {
 
     bool operator==(const Pair& other) const {
         return first == other.first && second == other.second;
+    }
+
+    std::string toString(){
+        std::string c = std::string(1, first) + second;
+        return c;
     }
 };
 

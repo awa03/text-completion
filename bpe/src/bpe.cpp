@@ -1,6 +1,5 @@
 #include "bpe.h"
 
-
 BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFAULT_VOCAB_SIZE){
     std::ifstream file(file_path);
     std::stringstream buffer;
@@ -14,17 +13,16 @@ BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFA
 
     // need to use while to prevent recursion depth from being reached
     while(!stop_flag){
-        Pair most_used_pair = {' ', ' ', 0}; // the pair that has been used the most
         std::cout << content << "\n";
-
+        Pair most_used_pair = {' ', ' ', 0}; // the pair that has been used the most
         // encode -- set these two vars
         data->encode(content, most_used_pair);
-        std::cout << most_used_pair.first;
-        std::cout << most_used_pair.second << "\n";
-        std::cout << most_used_pair.freq << "\n";
-        stop_flag = data->stopEncoding(most_used_pair.freq);
+        if(most_used_pair.freq == 1){
+            break;
+        }
     }
 
+    std::cout << content;
     return data;
 }
 
@@ -34,45 +32,57 @@ void BytePairEncoded::populateDict(string& content){
     }
 }
 
-void BytePairEncoded::encode(std::string& content, Pair& most_used_pair){
-    unordered_map<Pair, std::string, PairHash> pair_freq;
-    std::string new_data;
+void BytePairEncoded::encode(std::string& content, Pair& most_used_pair) {
+    // Reset the most frequent pair
+    most_used_pair.freq = 0;
 
-    for(size_t i = 0; i < content.size() - 1; i++){
+    // Create frequency map of adjacent character pairs
+    std::unordered_map<Pair, int, PairHash> pair_freq;
+
+    // Count frequencies of all pairs in the content
+    for(size_t i = 0; i < content.size() - 1; i++) {
         Pair tmp = {content[i], content[i + 1], 1};
         auto find = pair_freq.find(tmp);
 
-        std::string replacement;
-
-        // update frequency within local table
-        if(find != pair_freq.end()){
-            tmp.freq = find->first.freq + 1;
-            replacement = find->second;
-            pair_freq.erase(find);
-            pair_freq[tmp] = replacement;
-        }
-        else {
-            // get an unused char
-            replacement = getUnusedChar();
-            pair_freq[tmp] = replacement;
-
-            // add to the global vocab
-            auto find_vocab = vocab.find(tmp);
-            if(find == vocab.end()){
-                vocab[tmp] = replacement;
-            }
-        }
-
-        // update most used
-        if(tmp.freq > most_used_pair.freq){
-            most_used_pair = tmp;
+        // Update frequency
+        if(find != pair_freq.end()) {
+            pair_freq[tmp]++;
+        } else {
+            pair_freq[tmp] = 1;
         }
     }
 
-    content = new_data;
+    // Find the most frequent pair
+    for(const auto& pair : pair_freq) {
+        if(pair.second > most_used_pair.freq) {
+            most_used_pair = pair.first;
+            most_used_pair.freq = pair.second;
+        }
+    }
+
+    // Only replace if the most frequent pair appears more than once
+    if(most_used_pair.freq > 1) {
+        std::string replacement;
+        auto find_vocab = vocab.find(most_used_pair);
+
+        if(find_vocab != vocab.end()) {
+            replacement = find_vocab->second;
+        } else {
+            replacement = getUnusedChar();
+            char replace_char = replacement[0];
+            dict.insert(replace_char);
+            vocab[most_used_pair] = replacement;
+        }
+
+        // Replace all occurrences of the pair with the replacement character
+        std::string pair_str = std::string(1, most_used_pair.first) + std::string(1, most_used_pair.second);
+        size_t pos = 0;
+        while((pos = content.find(pair_str, pos)) != std::string::npos) {
+            content.replace(pos, 2, replacement);
+            pos += replacement.length();
+        }
+    }
 }
-
-
 
 bool BytePairEncoded::stopEncoding(int most_used_freq){
     if(most_used_freq == 1){
@@ -88,11 +98,19 @@ void BytePairEncoded::insertPairToVocab(char first, char second, const string& r
 }
 
 char BytePairEncoded::getUnusedChar() {
-    for (unsigned char c = 1; c < 255; c++) {
-        if (dict.find(c) == dict.end()) {
+    // for (unsigned char c = 128; c < 255; c++) {
+    //     if (dict.find(c) == dict.end()) {
+    //         return c;
+    //     }
+    // }
+
+    for (unsigned char c = 33; c < 127; c++) {
+        if (c != '"' && c != '\'' && c != '\\' && c != '/' &&
+            c != '{' && c != '}' && c != '[' && c != ']' &&
+            dict.find(c) == dict.end()) {
             return c;
         }
     }
-    throw runtime_error("No unused characters available in the ASCII range");
-}
 
+    throw std::runtime_error("No unused characters available for replacement");
+}

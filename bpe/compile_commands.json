@@ -6,6 +6,7 @@
       "-Wextra",
       "-Iinclude",
       "-std=c++11",
+      "-std=gnu++17",
       "-c",
       "-o",
       "obj/bpe.o",
