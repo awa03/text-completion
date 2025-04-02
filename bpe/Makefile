@@ -1,13 +1,13 @@
-CC := gcc
-CFLAGS := -Wall -Wextra -Iinclude -std=c11
+CC := g++
+CFLAGS := -Wall -Wextra -Iinclude -std=c++11
 
 SRC_DIR := src
 INC_DIR := include
 OBJ_DIR := obj
 BUILD_DIR := build
 
-SRCS := $(wildcard $(SRC_DIR)/*.c)
-OBJS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
+SRCS := $(wildcard $(SRC_DIR)/*.cpp)
+OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
 TARGET := $(BUILD_DIR)/bpe
 
