@@ -2,9 +2,20 @@
 
 BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFAULT_VOCAB_SIZE){
     std::ifstream file(file_path);
+
+    if(!file.is_open()){
+        std::cerr << "Error opening file path" << "\n";
+        return nullptr;
+    }
+
     std::stringstream buffer;
     buffer << file.rdbuf();
     std::string content = buffer.str();
+
+    if(content.size() <= 1){
+        std::cerr << "Filesize error" << "\n";
+        return nullptr;
+    }
 
     BytePairEncoded* data = new BytePairEncoded(v_size);
 
@@ -23,7 +34,15 @@ BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFA
     }
 
     std::cout << content;
+    std::cout << "\n\nVocab\n-------------\n";
+    data->dumpVocab();
     return data;
+}
+
+void BytePairEncoded::dumpVocab(){
+    for(auto& term : vocab){
+        cout << term.first.first << term.first.first << ": " << term.second << "\n";
+    }
 }
 
 void BytePairEncoded::populateDict(string& content){

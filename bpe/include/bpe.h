@@ -49,6 +49,7 @@ public:
     BytePairEncoded(size_t v_size) : vocab_size(v_size) {}
     void insertPairToVocab(char first, char second, const string& replacement);
     void encode(std::string& content, Pair& most_used_pair);
+    void dumpVocab();
     char getUnusedChar();
     void populateDict(std::string& content);
     bool stopEncoding(int most_used_freq);
