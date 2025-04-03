@@ -1,0 +1,19 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-Wall",
+      "-Wextra",
+      "-Iinclude",
+      "-std=c++11",
+      "-std=gnu++17",
+      "-c",
+      "-o",
+      "obj/bpe.o",
+      "src/bpe.cpp"
+    ],
+    "directory": "/home/aiden-allen/code/personal/markov-chain/bpe",
+    "file": "/home/aiden-allen/code/personal/markov-chain/bpe/src/bpe.cpp",
+    "output": "/home/aiden-allen/code/personal/markov-chain/bpe/obj/bpe.o"
+  }
+]
