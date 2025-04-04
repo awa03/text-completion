@@ -2,8 +2,8 @@
 
 ****
 ### Technology
-- Byte Pair Encoding Algorithm: C++ (Used for hashtable)
-- Markov Chain Implementation: C
+- Byte Pair Encoding Algorithm: C++ 
+- Markov Chain Implementation: C++
 ****
 ### Usage
 
