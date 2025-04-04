@@ -19,29 +19,24 @@ BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFA
         return nullptr;
     }
 
-    file.close();
-
     BytePairEncoded* data = new BytePairEncoded(v_size);
 
     data->populateDict(content);
     bool stop_flag = false;
 
-    // need to use while to prevent recursion depth from being reached
     while(!stop_flag){
-        Pair most_used_pair = {' ', ' ', 0}; // the pair that has been used the most
-        // encode -- set these two vars
+        Pair most_used_pair = {"", "", 0};
         data->encode(content, most_used_pair);
         if(data->vocab.size() >= v_size){
             break;
         }
-        if(most_used_pair.freq == 1){
+        if(most_used_pair.freq <= 1){
             break;
         }
     }
 
-    cout << content << "\n";
+    std::cout << content << "\n";
     std::cout << "\n\nVocab\n-------------\n";
-
 
     data->j_data["encoded"] = content;
     data->j_data["vocab"] = data->dumpVocab();
@@ -55,11 +50,11 @@ void BytePairEncoded::dumpToFile(const char* file_path){
     outFile.close();
 }
 
-json BytePairEncoded::dumpVocab(){
+json BytePairEncoded::dumpVocab() {
     json j_array = json::array();
-    for(auto& term : vocab){
+    for(auto& term : vocab) {
         json entry;
-        entry["pair"] = term.first.first;
+        entry["pair"] = term.first.first + term.first.second;
         entry["string"] = term.second;
         entry["freq"] = term.first.freq;
         j_array.push_back(entry);
@@ -67,30 +62,55 @@ json BytePairEncoded::dumpVocab(){
     return j_array;
 }
 
+std::vector<std::string> BytePairEncoded::splitIntoUTF8Chars(const std::string& str) {
+    std::vector<std::string> result;
+
+    for (size_t i = 0; i < str.length();) {
+        int charLen = 1;
+
+        if ((str[i] & 0x80) == 0) {
+            charLen = 1;
+        } else if ((str[i] & 0xE0) == 0xC0) {
+            charLen = 2;
+        } else if ((str[i] & 0xF0) == 0xE0) {
+            charLen = 3;
+        } else if ((str[i] & 0xF8) == 0xF0) {
+            charLen = 4;
+        }
+
+        if (i + charLen <= str.length()) {
+            result.push_back(str.substr(i, charLen));
+        } else {
+            result.push_back(str.substr(i, 1));
+        }
+
+        i += charLen;
+    }
+
+    return result;
+}
+
 void BytePairEncoded::populateDict(string& content){
+    auto chars = splitIntoUTF8Chars(content);
     for(auto& c: content){
-        dict.insert(c);
+        dict.insert(std::string(1, c));
     }
 }
 
 void BytePairEncoded::encode(std::string& content, Pair& most_used_pair) {
-    // Reset the most frequent pair
-    most_used_pair.freq = 0;
+     std::vector<std::string> chars = splitIntoUTF8Chars(content);
 
-    // Create frequency map of adjacent character pairs
     std::unordered_map<Pair, int, PairHash> pair_freq;
 
-    // Count frequencies of all pairs in the content
-    for(size_t i = 0; i < content.size() - 1; i++) {
-        Pair tmp = {content[i], content[i + 1], 1};
+    for(size_t i = 0; i < chars.size() - 1; i++) {
+        Pair tmp = {chars[i], chars[i + 1], 1};
         auto find = pair_freq.find(tmp);
 
-        // Update frequency
         if(find != pair_freq.end()) {
             pair_freq[tmp]++;
             auto find_vocab = vocab.find(tmp);
             if(find_vocab != vocab.end()){
-                std::string re= find_vocab->second;
+                std::string re = find_vocab->second;
                 vocab.erase(find_vocab);
                 vocab[tmp] = re;
             }
@@ -99,7 +119,6 @@ void BytePairEncoded::encode(std::string& content, Pair& most_used_pair) {
         }
     }
 
-    // Find the most frequent pair
     for(const auto& pair : pair_freq) {
         if(pair.second > most_used_pair.freq) {
             most_used_pair = pair.first;
@@ -107,7 +126,6 @@ void BytePairEncoded::encode(std::string& content, Pair& most_used_pair) {
         }
     }
 
-    // Only replace if the most frequent pair appears more than once
     if(most_used_pair.freq > 1) {
         std::string replacement;
         auto find_vocab = vocab.find(most_used_pair);
@@ -116,16 +134,14 @@ void BytePairEncoded::encode(std::string& content, Pair& most_used_pair) {
             replacement = find_vocab->second;
         } else {
             replacement = getUnusedChar();
-            char replace_char = replacement[0];
-            dict.insert(replace_char);
+            dict.insert(replacement);
             vocab[most_used_pair] = replacement;
         }
 
-        // Replace all occurrences of the pair with the replacement character
-        std::string pair_str = std::string(1, most_used_pair.first) + std::string(1, most_used_pair.second);
+        std::string pair_str = most_used_pair.first + most_used_pair.second;
         size_t pos = 0;
         while((pos = content.find(pair_str, pos)) != std::string::npos) {
-            content.replace(pos, 2, replacement);
+            content.replace(pos, pair_str.length(), replacement);
             pos += replacement.length();
         }
     }
@@ -139,25 +155,40 @@ bool BytePairEncoded::stopEncoding(int most_used_freq){
     return true;
 }
 
-void BytePairEncoded::insertPairToVocab(char first, char second, const string& replacement){
+void BytePairEncoded::insertPairToVocab(const std::string& first, const std::string& second, const string& replacement) {
     Pair p = {first, second, 0};
     vocab[p] = replacement;
 }
 
-char BytePairEncoded::getUnusedChar() {
-    for (unsigned char c = 0; c < 255; c++) {
-         if (dict.find(c) == dict.end()) {
-             return c;
-         }
-     }
-
+std::string BytePairEncoded::getUnusedChar() {
     for (unsigned char c = 33; c < 127; c++) {
         if (c != '"' && c != '\'' && c != '\\' && c != '/' &&
             c != '{' && c != '}' && c != '[' && c != ']' &&
-            dict.find(c) == dict.end()) {
-            return c;
+            dict.find(std::string(1, c)) == dict.end()) {
+            return std::string(1, c);
         }
     }
 
-    throw std::runtime_error("No unused characters available for replacement");
+    static int unicodeCounter = 0xE000;
+
+    char utf8[5] = {0, 0, 0, 0, 0};
+    int codepoint = unicodeCounter++;
+
+    if (codepoint <= 0x7F) {
+        utf8[0] = codepoint;
+    } else if (codepoint <= 0x7FF) {
+        utf8[0] = 0xC0 | (codepoint >> 6);
+        utf8[1] = 0x80 | (codepoint & 0x3F);
+    } else if (codepoint <= 0xFFFF) {
+        utf8[0] = 0xE0 | (codepoint >> 12);
+        utf8[1] = 0x80 | ((codepoint >> 6) & 0x3F);
+        utf8[2] = 0x80 | (codepoint & 0x3F);
+    } else {
+        utf8[0] = 0xF0 | (codepoint >> 18);
+        utf8[1] = 0x80 | ((codepoint >> 12) & 0x3F);
+        utf8[2] = 0x80 | ((codepoint >> 6) & 0x3F);
+        utf8[3] = 0x80 | (codepoint & 0x3F);
+    }
+
+    return std::string(utf8);
 }
