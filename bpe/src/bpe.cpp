@@ -10,12 +10,16 @@ BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFA
 
     std::stringstream buffer;
     buffer << file.rdbuf();
+    file.close();
+
     std::string content = buffer.str();
 
     if(content.size() <= 1){
         std::cerr << "Filesize error" << "\n";
         return nullptr;
     }
+
+    file.close();
 
     BytePairEncoded* data = new BytePairEncoded(v_size);
 
@@ -24,25 +28,43 @@ BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFA
 
     // need to use while to prevent recursion depth from being reached
     while(!stop_flag){
-        std::cout << content << "\n";
         Pair most_used_pair = {' ', ' ', 0}; // the pair that has been used the most
         // encode -- set these two vars
         data->encode(content, most_used_pair);
+        if(data->vocab.size() >= v_size){
+            break;
+        }
         if(most_used_pair.freq == 1){
             break;
         }
     }
 
-    std::cout << content;
+    cout << content << "\n";
     std::cout << "\n\nVocab\n-------------\n";
-    data->dumpVocab();
+
+
+    data->j_data["encoded"] = content;
+    data->j_data["vocab"] = data->dumpVocab();
+
     return data;
 }
 
-void BytePairEncoded::dumpVocab(){
+void BytePairEncoded::dumpToFile(const char* file_path){
+    std::ofstream outFile(file_path);
+    outFile << j_data.dump();
+    outFile.close();
+}
+
+json BytePairEncoded::dumpVocab(){
+    json j_array = json::array();
     for(auto& term : vocab){
-        cout << term.first.first << term.first.first << ": " << term.second << "\n";
+        json entry;
+        entry["pair"] = term.first.first;
+        entry["string"] = term.second;
+        entry["freq"] = term.first.freq;
+        j_array.push_back(entry);
     }
+    return j_array;
 }
 
 void BytePairEncoded::populateDict(string& content){
@@ -66,6 +88,12 @@ void BytePairEncoded::encode(std::string& content, Pair& most_used_pair) {
         // Update frequency
         if(find != pair_freq.end()) {
             pair_freq[tmp]++;
+            auto find_vocab = vocab.find(tmp);
+            if(find_vocab != vocab.end()){
+                std::string re= find_vocab->second;
+                vocab.erase(find_vocab);
+                vocab[tmp] = re;
+            }
         } else {
             pair_freq[tmp] = 1;
         }
@@ -117,11 +145,11 @@ void BytePairEncoded::insertPairToVocab(char first, char second, const string& r
 }
 
 char BytePairEncoded::getUnusedChar() {
-    // for (unsigned char c = 128; c < 255; c++) {
-    //     if (dict.find(c) == dict.end()) {
-    //         return c;
-    //     }
-    // }
+    for (unsigned char c = 0; c < 255; c++) {
+         if (dict.find(c) == dict.end()) {
+             return c;
+         }
+     }
 
     for (unsigned char c = 33; c < 127; c++) {
         if (c != '"' && c != '\'' && c != '\\' && c != '/' &&

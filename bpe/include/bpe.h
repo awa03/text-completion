@@ -9,13 +9,16 @@
 #include <string>
 #include <regex>
 
+#include "thirdparty/json.hpp"
+using json = nlohmann::json;
+
 #define DEFAULT_VOCAB_SIZE 32
 
 using namespace std;
 
 struct Pair {
     char first, second;
-    size_t freq;
+    int freq;
 
     bool operator==(const Pair& other) const {
         return first == other.first && second == other.second;
@@ -44,12 +47,14 @@ public:
     unordered_set<char> dict; // track used chars
     unordered_map<Pair, string, PairHash> vocab; // track used pairs and their replacements
     size_t vocab_size; // goal size of vocab
+    json j_data;
 
     BytePairEncoded(){}
     BytePairEncoded(size_t v_size) : vocab_size(v_size) {}
     void insertPairToVocab(char first, char second, const string& replacement);
     void encode(std::string& content, Pair& most_used_pair);
-    void dumpVocab();
+    json dumpVocab();
+    void dumpToFile(const char* file_path);
     char getUnusedChar();
     void populateDict(std::string& content);
     bool stopEncoding(int most_used_freq);
