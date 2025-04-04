@@ -1,5 +1,47 @@
 #include "bpe.h"
 
+BytePairEncoded* loadBytePairEncodedFile(const char* file_path){
+    std::ifstream file(file_path);
+    if(!file.is_open()){
+        std::cerr << "Error opening file path" << "\n";
+        return nullptr;
+    }
+    json j;
+    try {
+        file >> j;
+    } catch(json::parse_error& e){
+        std::cerr << "Parse error: " << e.what() << std::endl;
+        return nullptr;
+    }
+
+    BytePairEncoded* data = new BytePairEncoded(DEFAULT_VOCAB_SIZE);
+    data->loadVocab(j);
+    data->dumpVocabPrint();
+
+    return data;
+}
+
+void BytePairEncoded::loadVocab(json& builder){
+    auto content = builder["encoded"];
+    auto c = builder["vocab"];
+    for(auto& e : c){
+        Pair new_pair;
+        new_pair.first = e["pair"]["left"];
+        new_pair.second = e["pair"]["right"];
+        new_pair.freq = e["freq"];
+
+        std::string replacement = e["string"];
+        vocab[new_pair] = replacement;
+    }
+}
+
+
+void BytePairEncoded::dumpVocabPrint(){
+    for(auto& e : vocab){
+        cout << "Replacement: " << e.second << " :" << e.first.first << "," << e.first.second << "\n";
+    }
+}
+
 BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFAULT_VOCAB_SIZE){
     std::ifstream file(file_path);
 
@@ -48,7 +90,10 @@ json BytePairEncoded::dumpVocab() {
     json j_array = json::array();
     for(auto& term : vocab) {
         json entry;
-        entry["pair"] = term.first.first + term.first.second;
+        json pair;
+        pair["left"] = term.first.first;
+        pair["right"] = term.first.second;
+        entry["pair"] = pair;
         entry["string"] = term.second;
         entry["freq"] = term.first.freq;
         j_array.push_back(entry);
@@ -230,6 +275,8 @@ void BytePairEncoded::printPairChain(const Pair& load_pair, bool is_dot) {
     }
 
 }
+
+
 
 Pair BytePairEncoded::getRandomPair(){
      static std::random_device rd;

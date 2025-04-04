@@ -52,10 +52,12 @@ int main(int argc, char *argv[]){
 
     }
     else {
-        // decodeBytePairEncoding(*bpe_path, *output_path);
+       auto data = loadBytePairEncodedFile(*bpe_path);
+        srand(time(0));
+        for(int i = 0; i < *random; i++){
+            data->printPairChain(data->getRandomPair());
+        }
     }
-
-
 
     return 0;
 }

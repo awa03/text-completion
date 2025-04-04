@@ -59,12 +59,12 @@ public:
     size_t vocab_size; // goal size of vocab
     json j_data;
 
-    BytePairEncoded(){}
-
     std::vector<std::string> splitIntoUTF8Chars(const std::string& str);
     BytePairEncoded(size_t v_size) : vocab_size(v_size) {}
     void insertPairToVocab(const std::string& first, const std::string& second, const string& replacement);
     void encode(std::string& content, Pair& most_used_pair);
+    void loadVocab(json& builder);
+    void dumpVocabPrint();
     json dumpVocab();
     void dumpToFile(const char* file_path);
     void printPairChain(const Pair& load_pair, bool is_dot = false);
@@ -75,5 +75,6 @@ public:
 };
 
 BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size);
+BytePairEncoded* loadBytePairEncodedFile(const char* file_path);
 
 #endif // BPE_H_
