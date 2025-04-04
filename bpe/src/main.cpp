@@ -16,6 +16,8 @@ int main(int argc, char *argv[]){
     char **bpe_path = flag_str("bpe", NULL, "Path to BPE file (MANADATORY if decoding)");
     char **output_path = flag_str("o", "gen.bpe", "Path to Output file");
     bool *help      = flag_bool("help", false, "Print this help message");
+    bool *dot      = flag_bool("dot", false, "Outputs dot file text to console");
+    uint64_t *random      = flag_uint64("random-token", 0, "Outputs dot file text to console");
     uint64_t *limit = flag_uint64("limit", DEFAULT_VOCAB_SIZE, "Vocab size");
 
     if (!flag_parse(argc, argv)) {
@@ -33,10 +35,27 @@ int main(int argc, char *argv[]){
     else if(*bpe_path == NULL && *txt_path != NULL){
         auto data = genBytePairEncoding(*txt_path, *limit);
         data->dumpToFile(*output_path);
+
+        if(*dot){
+            cout << "digraph Pairs {\n";
+            for(auto p: data->vocab){
+                data->printPairChain(p.first, true);
+            }
+            cout << "}";
+        }
+
+
+        srand(time(0));
+        for(int i = 0; i < *random; i++){
+            data->printPairChain(data->getRandomPair());
+        }
+
     }
     else {
         // decodeBytePairEncoding(*bpe_path, *output_path);
     }
+
+
 
     return 0;
 }
