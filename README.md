@@ -9,6 +9,7 @@
 
 ****
 ### Byte Pair Encoding
+![pairs](https://github.com/user-attachments/assets/bd4b1de2-2923-4d68-bfb5-d4923d0fcc76)
 
 ****
 ### Markov Chain
