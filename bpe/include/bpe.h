@@ -8,11 +8,12 @@
 #include <sstream>
 #include <string>
 #include <regex>
+#include <random>
 
 #include "thirdparty/json.hpp"
 using json = nlohmann::json;
 
-#define DEFAULT_VOCAB_SIZE 32
+#define DEFAULT_VOCAB_SIZE 999999999999
 
 using namespace std;
 
@@ -20,10 +21,21 @@ struct Pair {
     std::string first, second;
     int freq;
 
-    bool operator==(const Pair& other) const {
+    bool operator==(const Pair& other) const{
         return first == other.first && second == other.second;
     }
- std::string toString(){
+
+    Pair& operator=(const Pair& other){
+        if (this != &other) {
+            first = other.first;
+            second = other.second;
+            freq = other.freq;
+        }
+        return *this;
+
+    }
+
+ std::string toString() const {
         return first + second;
     }
 };
@@ -47,19 +59,22 @@ public:
     size_t vocab_size; // goal size of vocab
     json j_data;
 
-    BytePairEncoded(){}
-
     std::vector<std::string> splitIntoUTF8Chars(const std::string& str);
     BytePairEncoded(size_t v_size) : vocab_size(v_size) {}
     void insertPairToVocab(const std::string& first, const std::string& second, const string& replacement);
     void encode(std::string& content, Pair& most_used_pair);
+    void loadVocab(json& builder);
+    void dumpVocabPrint();
     json dumpVocab();
     void dumpToFile(const char* file_path);
+    void printPairChain(const Pair& load_pair, bool is_dot = false);
     std::string getUnusedChar();
     void populateDict(std::string& content);
     bool stopEncoding(int most_used_freq);
+    Pair getRandomPair();
 };
 
 BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size);
+BytePairEncoded* loadBytePairEncodedFile(const char* file_path);
 
 #endif // BPE_H_

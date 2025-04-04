@@ -1,5 +1,47 @@
 #include "bpe.h"
 
+BytePairEncoded* loadBytePairEncodedFile(const char* file_path){
+    std::ifstream file(file_path);
+    if(!file.is_open()){
+        std::cerr << "Error opening file path" << "\n";
+        return nullptr;
+    }
+    json j;
+    try {
+        file >> j;
+    } catch(json::parse_error& e){
+        std::cerr << "Parse error: " << e.what() << std::endl;
+        return nullptr;
+    }
+
+    BytePairEncoded* data = new BytePairEncoded(DEFAULT_VOCAB_SIZE);
+    data->loadVocab(j);
+    data->dumpVocabPrint();
+
+    return data;
+}
+
+void BytePairEncoded::loadVocab(json& builder){
+    auto content = builder["encoded"];
+    auto c = builder["vocab"];
+    for(auto& e : c){
+        Pair new_pair;
+        new_pair.first = e["pair"]["left"];
+        new_pair.second = e["pair"]["right"];
+        new_pair.freq = e["freq"];
+
+        std::string replacement = e["string"];
+        vocab[new_pair] = replacement;
+    }
+}
+
+
+void BytePairEncoded::dumpVocabPrint(){
+    for(auto& e : vocab){
+        cout << "Replacement: " << e.second << " :" << e.first.first << "," << e.first.second << "\n";
+    }
+}
+
 BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFAULT_VOCAB_SIZE){
     std::ifstream file(file_path);
 
@@ -27,16 +69,10 @@ BytePairEncoded* genBytePairEncoding(const char* file_path, size_t v_size = DEFA
     while(!stop_flag){
         Pair most_used_pair = {"", "", 0};
         data->encode(content, most_used_pair);
-        if(data->vocab.size() >= v_size){
-            break;
-        }
         if(most_used_pair.freq <= 1){
             break;
         }
     }
-
-    std::cout << content << "\n";
-    std::cout << "\n\nVocab\n-------------\n";
 
     data->j_data["encoded"] = content;
     data->j_data["vocab"] = data->dumpVocab();
@@ -54,7 +90,10 @@ json BytePairEncoded::dumpVocab() {
     json j_array = json::array();
     for(auto& term : vocab) {
         json entry;
-        entry["pair"] = term.first.first + term.first.second;
+        json pair;
+        pair["left"] = term.first.first;
+        pair["right"] = term.first.second;
+        entry["pair"] = pair;
         entry["string"] = term.second;
         entry["freq"] = term.first.freq;
         j_array.push_back(entry);
@@ -191,4 +230,61 @@ std::string BytePairEncoded::getUnusedChar() {
     }
 
     return std::string(utf8);
+}
+
+/*
+ * Since this will resolve in essentially a tree like data structure, we should first swap the list
+ * */
+
+void BytePairEncoded::printPairChain(const Pair& load_pair, bool is_dot) {
+    unordered_map<std::string, Pair> reversed_vocab;
+    for(auto& token : vocab) {
+        reversed_vocab[token.second] = token.first;
+    }
+
+    std::stack<std::string> replacements;
+    std::unordered_set<std::string> visited;
+
+    replacements.push(load_pair.second);
+    replacements.push(load_pair.first);
+
+
+    while(!replacements.empty()) {
+        std::string key = replacements.top();
+        replacements.pop();
+
+        if(visited.find(key) != visited.end()) {
+            continue;
+        }
+
+        visited.insert(key);
+
+
+        auto curr = reversed_vocab.find(key);
+        if(curr != reversed_vocab.end()) {
+            replacements.push(curr->second.second);
+            replacements.push(curr->second.first);
+            if(is_dot) std::cout << '"' << key << '"' << " -> "
+                                 << '"' << curr->second.first << '"' << "\n";
+            if(is_dot) std::cout << '"' << key << '"' << " -> "
+                                 << '"' << curr->second.second << '"' << "\n";
+
+        } else {
+            if(!is_dot) cout << key;
+        }
+    }
+
+}
+
+
+
+Pair BytePairEncoded::getRandomPair(){
+     static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(0, vocab.size() - 1);
+
+    auto item = vocab.begin();
+    std::advance(item, distrib(gen));
+
+    return item->first;
 }
