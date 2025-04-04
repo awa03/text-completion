@@ -9,27 +9,28 @@
 #include <string>
 #include <regex>
 
+#include "thirdparty/json.hpp"
+using json = nlohmann::json;
+
 #define DEFAULT_VOCAB_SIZE 32
 
 using namespace std;
 
 struct Pair {
-    char first, second;
-    size_t freq;
+    std::string first, second;
+    int freq;
 
     bool operator==(const Pair& other) const {
         return first == other.first && second == other.second;
     }
-
-    std::string toString(){
-        std::string c = std::string(1, first) + second;
-        return c;
+ std::string toString(){
+        return first + second;
     }
 };
 
 struct PairHash {
-    size_t operator()(const Pair& p) const {
-        return std::hash<char>()(p.first) ^ std::hash<char>()(p.second);
+  size_t operator()(const Pair& p) const {
+        return std::hash<std::string>()(p.first) ^ std::hash<std::string>()(p.second);
     }
 };
 
@@ -41,16 +42,20 @@ struct PairHash {
 
 struct BytePairEncoded {
 public:
-    unordered_set<char> dict; // track used chars
+    unordered_set<string> dict; // track used chars
     unordered_map<Pair, string, PairHash> vocab; // track used pairs and their replacements
     size_t vocab_size; // goal size of vocab
+    json j_data;
 
     BytePairEncoded(){}
+
+    std::vector<std::string> splitIntoUTF8Chars(const std::string& str);
     BytePairEncoded(size_t v_size) : vocab_size(v_size) {}
-    void insertPairToVocab(char first, char second, const string& replacement);
+    void insertPairToVocab(const std::string& first, const std::string& second, const string& replacement);
     void encode(std::string& content, Pair& most_used_pair);
-    void dumpVocab();
-    char getUnusedChar();
+    json dumpVocab();
+    void dumpToFile(const char* file_path);
+    std::string getUnusedChar();
     void populateDict(std::string& content);
     bool stopEncoding(int most_used_freq);
 };
