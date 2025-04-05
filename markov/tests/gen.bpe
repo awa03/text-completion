@@ -1,0 +1,61 @@
+{
+  "encoded": "!!&)$(&%d(%$\n",
+  "vocab": [
+    {
+      "freq": 2,
+      "pair": {
+        "left": "!",
+        "right": "a"
+      },
+      "string": "("
+    },
+    {
+      "freq": 2,
+      "pair": {
+        "left": "$",
+        "right": "$"
+      },
+      "string": ")"
+    },
+    {
+      "freq": 2,
+      "pair": {
+        "left": "#",
+        "right": "#"
+      },
+      "string": "&"
+    },
+    {
+      "freq": 3,
+      "pair": {
+        "left": "d",
+        "right": "d"
+      },
+      "string": "%"
+    },
+    {
+      "freq": 6,
+      "pair": {
+        "left": "c",
+        "right": "c"
+      },
+      "string": "$"
+    },
+    {
+      "freq": 6,
+      "pair": {
+        "left": "b",
+        "right": "b"
+      },
+      "string": "#"
+    },
+    {
+      "freq": 7,
+      "pair": {
+        "left": "a",
+        "right": "a"
+      },
+      "string": "!"
+    }
+  ]
+}

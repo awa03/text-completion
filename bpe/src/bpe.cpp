@@ -259,7 +259,6 @@ void BytePairEncoded::printPairChain(const Pair& load_pair, bool is_dot) {
 
         visited.insert(key);
 
-
         auto curr = reversed_vocab.find(key);
         if(curr != reversed_vocab.end()) {
             replacements.push(curr->second.second);
