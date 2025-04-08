@@ -1,5 +1,5 @@
 CC := g++
-CFLAGS := -Wall -Wextra -Iinclude -std=c++11 
+CFLAGS := -Wall -Wextra -Iinclude -std=c++11 -std=gnu++17  
 
 SRC_DIR := src
 INC_DIR := include
@@ -9,16 +9,7 @@ BUILD_DIR := build
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
-CXXFLAGS += \
-  -I/usr/include/c++/13 \
-  -I/usr/include/x86_64-linux-gnu/c++/13 \
-  -I/usr/include/c++/13/backward \
-  -I/usr/lib/gcc/x86_64-linux-gnu/13/include \
-  -I/usr/local/include \
-  -I/usr/include/x86_64-linux-gnu \
-  -I/usr/include
-
-TARGET := $(BUILD_DIR)/text-gen
+TARGET := $(BUILD_DIR)/tokenizer
 
 all: $(TARGET)
 
@@ -38,5 +29,4 @@ clean:
 	rm -rf $(OBJ_DIR) $(BUILD_DIR)
 
 .PHONY: all clean
-
 

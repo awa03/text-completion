@@ -13,6 +13,7 @@
 #include "thirdparty/json.hpp"
 using json = nlohmann::json;
 
+
 struct Pair {
     std::string first, second;
     int freq;
@@ -50,6 +51,8 @@ typedef struct {
     std::unordered_map<std::string, Pair> reversed_vocab;
 } RelationTable;
 
+
+
 RelationTable* load_table_from_file(const char* file_path);
 void load_vocab(RelationTable* relation, json builder);
 void reverse_vocab(RelationTable* relation);
@@ -58,5 +61,5 @@ Pair getRandomPair(RelationTable* relation);
 std::string getHighestProbability(RelationTable* relation, std::string token);
 std::string decodeToken(RelationTable* relation, std::string token);
 std::string generateSentence(RelationTable* relation, int max_length =100);
-
+std::string getRandomFromProbability(RelationTable* relation, std::string token);
 #endif // RELATIONS_H_
