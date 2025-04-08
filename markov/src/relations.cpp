@@ -164,6 +164,26 @@ std::string getHighestProbability(RelationTable* relation, std::string token){
     return highest_str;
 }
 
+std::string getRandomFromProbability(RelationTable* relation, std::string token){
+    if(!relation){
+        std::cerr << "Error: Null relation table\n";
+        return "";
+    }
+
+    int r = relation->occurance[token];
+    double cumulative = 0.0;
+    auto iter = relation->probability.find(token);
+    if (iter != relation->probability.end()) {
+        for(auto& [key, probability] : iter->second) {
+            cumulative += probability;
+            if (r < cumulative) {
+                return key;
+            }
+        }
+    }
+    return getHighestProbability(relation, token);
+}
+
 std::string generateSentence(RelationTable* relation, int max_length) {
     if (!relation || relation->probability.empty()) {
         std::cerr << "Error: Invalid relation table or empty probability map\n";
@@ -176,7 +196,7 @@ std::string generateSentence(RelationTable* relation, int max_length) {
     std::string result = decoded;
 
     for (int i = 0; i < max_length; i++) {
-        std::string next_token = getHighestProbability(relation, current_token);
+        std::string next_token = getRandomFromProbability(relation, current_token);
 
         if (next_token.empty()) {
             auto random_pair = getRandomPair(relation);
@@ -199,3 +219,4 @@ std::string generateSentence(RelationTable* relation, int max_length) {
 
     return result;
 }
+
